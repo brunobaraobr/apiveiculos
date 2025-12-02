@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>API de Consulta de Veículos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="navbar">
+        <div class="logo">API Veículos</div>
+        <div class="nav-actions">
+          <a class="btn ghost" href="#como-funciona">Como funciona</a>
+          <a class="btn" href="{{ whatsapp_link }}" target="_blank" rel="noopener">Contratar agora</a>
+        </div>
+      </nav>
+      <div class="hero-content">
+        <div class="hero-text">
+          <p class="eyebrow">Consulta completa por placa</p>
+          <h1>Automatize a verificação de veículos em segundos.</h1>
+          <p class="lede">
+            Receba modelo, marca, cidade, tipo, estado e cor em uma API confiável, pronta para ser integrada em qualquer sistema.
+          </p>
+          <div class="hero-actions">
+            <a class="btn" href="{{ whatsapp_link }}" target="_blank" rel="noopener">Comprar agora</a>
+            <a class="btn ghost" href="#demo">Ver demonstração</a>
+          </div>
+          <div class="badges">
+            <span>Suporte rápido pelo WhatsApp</span>
+            <span>Docs claras e onboarding guiado</span>
+            <span>Proteção contra uso automatizado</span>
+          </div>
+        </div>
+        <div class="card" id="demo">
+          <div class="card-header">
+            <div>
+              <p class="label">Demonstração</p>
+              <h2>Consulta por placa</h2>
+            </div>
+            <p class="pill">Resposta em tempo real</p>
+          </div>
+          <form id="consulta-form">
+            <label for="placa">Digite a placa</label>
+            <div class="input-group">
+              <input id="placa" name="placa" placeholder="ABC1D23" maxlength="7" required />
+              <button type="submit" class="btn">Consultar</button>
+            </div>
+          </form>
+          <div class="result" id="resultado">
+            <p>Consulte uma placa para visualizar os dados.</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="section" id="como-funciona">
+      <div class="section-header">
+        <p class="eyebrow">Simples e transparente</p>
+        <h2>Do pagamento à integração em minutos</h2>
+        <p class="lede">Fluxo pensado para você começar rápido e com segurança.</p>
+      </div>
+      <div class="grid">
+        <div class="feature">
+          <h3>1. Fale com o time</h3>
+          <p>Use o botão de WhatsApp para combinar a contratação e receber orientações rápidas.</p>
+        </div>
+        <div class="feature">
+          <h3>2. Receba o token</h3>
+          <p>Geramos um token exclusivo para seu ambiente e enviamos com instruções claras de uso.</p>
+        </div>
+        <div class="feature">
+          <h3>3. Integre em seu sistema</h3>
+          <p>Endpoints REST simples, exemplos em Python e Node e monitoramento de consumo em tempo real.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section highlight" id="planos">
+      <div class="plan">
+        <p class="eyebrow">Plano único</p>
+        <h3>{{ pricing.currency }} {{ pricing.value }}</h3>
+        <p class="lede">{{ pricing.requests }}</p>
+        <ul class="list">
+          <li>Consulta completa: modelo, marca, cidade, tipo, estado e cor</li>
+          <li>Até 60 consultas por minuto de forma sustentada</li>
+          <li>Uso ilimitado dentro do mês contratado</li>
+          <li>Suporte técnico dedicado</li>
+        </ul>
+        <a class="btn" href="{{ whatsapp_link }}" target="_blank" rel="noopener">Comprar agora</a>
+        <p class="micro">R$ {{ pricing.value }} / mês — fale direto com o time para ativar.</p>
+      </div>
+      <div class="info">
+        <h3>Proteção e controle</h3>
+        <p>Tokens individuais e limitação de requisições por minuto ajudam a evitar uso automatizado indevido.</p>
+        <div class="pill">Token exclusivo por cliente</div>
+        <div class="pill">Rate limit configurável</div>
+        <div class="pill">Monitoramento básico de IP</div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="section-header">
+        <p class="eyebrow">Perguntas frequentes</p>
+        <h2>Tire suas dúvidas antes de contratar</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Como configurar o número do WhatsApp?</summary>
+          <p>Defina a variável de ambiente <code>WHATSAPP_NUMBER</code> com DDI e DDD. O botão já monta o link automaticamente.</p>
+        </details>
+        <details>
+          <summary>Posso alterar o texto padrão da mensagem?</summary>
+          <p>Sim. Use a variável <code>WHATSAPP_MESSAGE</code> para personalizar a saudação enviada no clique.</p>
+        </details>
+        <details>
+          <summary>Como proteger meu token de teste?</summary>
+          <p>Defina um <code>DEMO_API_KEY</code> para exigir a chave em cada requisição e configure limites via <code>RATE_LIMIT_REQUESTS</code> e <code>RATE_LIMIT_WINDOW</code>.</p>
+        </details>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>API de Consulta de Veículos • Confiável, rápida e simples de integrar.</p>
+      <a href="{{ whatsapp_link }}" target="_blank" rel="noopener" class="btn ghost">Solicitar agora</a>
+    </footer>
+
+    <script>
+      async function consultarPlaca(event) {
+        event.preventDefault();
+        const placaInput = document.getElementById('placa');
+        const resultado = document.getElementById('resultado');
+        const placa = (placaInput.value || '').trim();
+
+        if (!placa) {
+          resultado.innerHTML = '<p class="error">Informe uma placa válida.</p>';
+          return;
+        }
+
+        resultado.innerHTML = '<p class="loading">Consultando...</p>';
+
+        try {
+          const resposta = await fetch('/api/consultar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ placa })
+          });
+
+          const dados = await resposta.json();
+
+          if (!resposta.ok) {
+            resultado.innerHTML = `<p class="error">${dados.erro || 'Erro ao consultar.'}</p>`;
+            return;
+          }
+
+          resultado.innerHTML = `
+            <div class="data-grid">
+              <div><span>Placa</span><strong>${dados.placa || placa}</strong></div>
+              <div><span>Modelo</span><strong>${dados.modelo}</strong></div>
+              <div><span>Marca</span><strong>${dados.marca}</strong></div>
+              <div><span>Cidade</span><strong>${dados.cidade}</strong></div>
+              <div><span>Tipo</span><strong>${dados.tipo}</strong></div>
+              <div><span>Estado</span><strong>${dados.estado}</strong></div>
+              <div><span>Cor</span><strong>${dados.cor}</strong></div>
+              ${dados.observacao ? `<div class="full"><span>Obs.</span><strong>${dados.observacao}</strong></div>` : ''}
+            </div>
+          `;
+        } catch (error) {
+          resultado.innerHTML = '<p class="error">Não foi possível consultar agora. Tente novamente.</p>';
+        }
+      }
+
+      document.getElementById('consulta-form').addEventListener('submit', consultarPlaca);
+    </script>
+  </body>
+</html>

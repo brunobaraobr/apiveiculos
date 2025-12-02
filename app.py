@@ -1,12 +1,17 @@
+from collections import defaultdict, deque
 from flask import Flask, jsonify, render_template, request
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
-import mercadopago
 import os
+import time
 
 load_dotenv()
 
 app = Flask(__name__)
+
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "20"))
+RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # segundos
+_rate_limits = defaultdict(deque)
 
 SAMPLE_DATA = {
     "ABC1D23": {
@@ -64,6 +69,16 @@ def build_whatsapp_link(number: str, message: str) -> str:
 @app.route("/api/consultar", methods=["POST"])
 def consultar():
     payload = request.get_json(silent=True) or {}
+    api_key = payload.get("api_key") or request.headers.get("X-API-KEY")
+    expected_key = (os.getenv("DEMO_API_KEY") or "").strip()
+
+    if expected_key and api_key != expected_key:
+        return jsonify({"erro": "Acesso não autorizado."}), 401
+
+    client_ip = _get_client_ip()
+    if _is_rate_limited(client_ip):
+        return jsonify({"erro": "Limite de consultas temporariamente excedido. Aguarde um instante."}), 429
+
     plate = (payload.get("placa") or "").strip().upper()
 
     if not plate:
@@ -83,75 +98,26 @@ def consultar():
     return jsonify(data)
 
 
-@app.route("/api/checkout", methods=["POST"])
-def checkout():
-    access_token = get_access_token()
-    if not access_token:
-        return (
-            jsonify(
-                {
-                    "erro": (
-                        "Configure a variável de ambiente MERCADOPAGO_ACCESS_TOKEN (ou MERCADO_PAGO_ACCESS_TOKEN)"
-                        " com o token APP_USR fornecido pelo Mercado Pago."
-                    )
-                }
-            ),
-            500,
-        )
-
-    sdk = mercadopago.SDK(access_token)
-    preference_data = {
-        "items": [
-            {
-                "title": "Assinatura API de Consulta de Veículos",
-                "description": "Plano mensal - 60 consultas por minuto, uso ilimitado no mês",
-                "quantity": 1,
-                "currency_id": "BRL",
-                "unit_price": float(os.getenv("PLAN_PRICE", 400)),
-            }
-        ],
-        "back_urls": {
-            "success": os.getenv("CHECKOUT_SUCCESS_URL", "http://localhost:5000/"),
-            "failure": os.getenv("CHECKOUT_FAILURE_URL", "http://localhost:5000/"),
-            "pending": os.getenv("CHECKOUT_PENDING_URL", "http://localhost:5000/"),
-        },
-        "auto_return": "approved",
-    }
-
-    payer_email = request.json.get("email") if request.is_json else None
-    if payer_email:
-        preference_data["payer"] = {"email": payer_email}
-
-    try:
-        preference_response = sdk.preference().create(preference_data)
-        status_code = preference_response.get("status")
-        if status_code not in (200, 201):
-            response_body = preference_response.get("response", {}) or {}
-            error_message = response_body.get("message") or response_body.get("error")
-            raise ValueError(
-                f"Mercado Pago retornou status {status_code}: {error_message or 'Erro desconhecido'}"
-            )
-
-        init_point = preference_response.get("response", {}).get("init_point")
-        if not init_point:
-            raise ValueError("Resposta do Mercado Pago não contém init_point")
-        return jsonify({"checkout_url": init_point})
-    except Exception as exc:  # pylint: disable=broad-except
-        return jsonify({"erro": f"Não foi possível criar o checkout: {exc}"}), 500
+def _get_client_ip() -> str:
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.remote_addr or "unknown"
 
 
-def get_access_token() -> str | None:
-    """
-    Recupera o token do Mercado Pago, suportando tanto variável padrão quanto fallback.
-    Também permite carregar tokens de um arquivo .env (via load_dotenv acima).
-    """
+def _is_rate_limited(client_ip: str) -> bool:
+    now = time.time()
+    window_start = now - RATE_LIMIT_WINDOW
+    bucket = _rate_limits[client_ip]
 
-    raw_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN") or os.getenv(
-        "MERCADO_PAGO_ACCESS_TOKEN"
-    )
-    if raw_token:
-        return raw_token.strip()
-    return None
+    while bucket and bucket[0] < window_start:
+        bucket.popleft()
+
+    if len(bucket) >= RATE_LIMIT_REQUESTS:
+        return True
+
+    bucket.append(now)
+    return False
 
 
 if __name__ == "__main__":

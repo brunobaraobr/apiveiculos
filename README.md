@@ -17,13 +17,17 @@ pip install -r requirements.txt
 cat > .env <<'ENV'
 WHATSAPP_NUMBER=5599999999999
 WHATSAPP_MESSAGE="Olá! Quero contratar a API de consulta de veículos."
-MERCADOPAGO_ACCESS_TOKEN="APP_USR_SEU_TOKEN"
+DEMO_API_KEY="chave-demo"
+RATE_LIMIT_REQUESTS=20
+RATE_LIMIT_WINDOW=60
 ENV
 
 # ou exporte manualmente
 export WHATSAPP_NUMBER=5599999999999
 export WHATSAPP_MESSAGE="Olá! Quero contratar a API de consulta de veículos."
-export MERCADOPAGO_ACCESS_TOKEN="APP_USR_SEU_TOKEN"
+export DEMO_API_KEY="chave-demo"
+export RATE_LIMIT_REQUESTS=20
+export RATE_LIMIT_WINDOW=60
 python app.py
 ```
 
@@ -32,8 +36,8 @@ A aplicação sobe em `http://localhost:5000`.
 ## Configurações opcionais
 
 - `PLAN_PRICE`, `PLAN_CURRENCY`, `PLAN_REQUESTS`: personalizam o card de preço (padrão `R$ 400` com 60 consultas/min e uso ilimitado no mês).
-- `MERCADOPAGO_ACCESS_TOKEN` (ou `MERCADO_PAGO_ACCESS_TOKEN`): token de produção usado para criar a preferência de pagamento via `/api/checkout`. O aplicativo lê automaticamente valores definidos em `.env`.
-- `CHECKOUT_SUCCESS_URL`, `CHECKOUT_FAILURE_URL`, `CHECKOUT_PENDING_URL`: URLs para redirecionamento após o pagamento no Mercado Pago.
+- `DEMO_API_KEY`: se definido, toda consulta ao endpoint `/api/consultar` deve conter a chave em `X-API-KEY` ou no corpo `api_key`.
+- `RATE_LIMIT_REQUESTS` e `RATE_LIMIT_WINDOW`: controlam o número máximo de consultas por IP dentro da janela (por padrão, 20 solicitações em 60 segundos).
 
 ## Estrutura
 

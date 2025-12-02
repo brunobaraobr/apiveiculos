@@ -26,13 +26,13 @@
             Receba modelo, marca, cidade, tipo, estado e cor em uma API confiável, pronta para ser integrada em qualquer sistema.
           </p>
           <div class="hero-actions">
-            <button class="btn" type="button" onclick="iniciarCheckout()">Comprar agora</button>
+            <a class="btn" href="{{ whatsapp_link }}" target="_blank" rel="noopener">Comprar agora</a>
             <a class="btn ghost" href="#demo">Ver demonstração</a>
           </div>
           <div class="badges">
-            <span>Pagamento seguro Mercado Pago</span>
             <span>Suporte rápido pelo WhatsApp</span>
             <span>Docs claras e onboarding guiado</span>
+            <span>Proteção contra uso automatizado</span>
           </div>
         </div>
         <div class="card" id="demo">
@@ -65,12 +65,12 @@
       </div>
       <div class="grid">
         <div class="feature">
-          <h3>1. Pagamento online</h3>
-          <p>Use seu checkout do Mercado Pago para liberar o token de acesso imediatamente após a confirmação.</p>
+          <h3>1. Fale com o time</h3>
+          <p>Use o botão de WhatsApp para combinar a contratação e receber orientações rápidas.</p>
         </div>
         <div class="feature">
           <h3>2. Receba o token</h3>
-          <p>Enviamos o token exclusivo diretamente no seu e-mail ou WhatsApp com instruções claras de uso.</p>
+          <p>Geramos um token exclusivo para seu ambiente e enviamos com instruções claras de uso.</p>
         </div>
         <div class="feature">
           <h3>3. Integre em seu sistema</h3>
@@ -90,15 +90,15 @@
           <li>Uso ilimitado dentro do mês contratado</li>
           <li>Suporte técnico dedicado</li>
         </ul>
-        <button class="btn" type="button" onclick="iniciarCheckout()">Comprar agora</button>
-        <p class="micro">Pagamento de R$ {{ pricing.value }} / mês com checkout seguro Mercado Pago.</p>
+        <a class="btn" href="{{ whatsapp_link }}" target="_blank" rel="noopener">Comprar agora</a>
+        <p class="micro">R$ {{ pricing.value }} / mês — fale direto com o time para ativar.</p>
       </div>
       <div class="info">
-        <h3>Checkout via Mercado Pago</h3>
-        <p>Configure seu token de acesso de produção para liberar pagamentos com segurança.</p>
-        <div class="pill">Token de acesso guardado em variável de ambiente</div>
-        <div class="pill">Criação de preferência server-side</div>
-        <div class="pill">Redireciono imediato para o checkout</div>
+        <h3>Proteção e controle</h3>
+        <p>Tokens individuais e limitação de requisições por minuto ajudam a evitar uso automatizado indevido.</p>
+        <div class="pill">Token exclusivo por cliente</div>
+        <div class="pill">Rate limit configurável</div>
+        <div class="pill">Monitoramento básico de IP</div>
       </div>
     </section>
 
@@ -117,8 +117,8 @@
           <p>Sim. Use a variável <code>WHATSAPP_MESSAGE</code> para personalizar a saudação enviada no clique.</p>
         </details>
         <details>
-          <summary>Como integrar o Mercado Pago?</summary>
-          <p>Defina <code>MERCADOPAGO_PUBLIC_KEY</code> e <code>MERCADOPAGO_ACCESS_TOKEN</code> em variáveis de ambiente para configurar seu checkout server-side.</p>
+          <summary>Como proteger meu token de teste?</summary>
+          <p>Defina um <code>DEMO_API_KEY</code> para exigir a chave em cada requisição e configure limites via <code>RATE_LIMIT_REQUESTS</code> e <code>RATE_LIMIT_WINDOW</code>.</p>
         </details>
       </div>
     </section>
@@ -129,26 +129,6 @@
     </footer>
 
     <script>
-      async function iniciarCheckout() {
-        try {
-          const resposta = await fetch('/api/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
-
-          const dados = await resposta.json();
-
-          if (!resposta.ok || !dados.checkout_url) {
-            alert(dados.erro || 'Não foi possível iniciar o checkout no momento.');
-            return;
-          }
-
-          window.location.href = dados.checkout_url;
-        } catch (error) {
-          alert('Não foi possível iniciar o checkout no momento.');
-        }
-      }
-
       async function consultarPlaca(event) {
         event.preventDefault();
         const placaInput = document.getElementById('placa');

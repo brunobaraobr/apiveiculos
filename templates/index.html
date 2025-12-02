@@ -26,7 +26,7 @@
             Receba modelo, marca, cidade, tipo, estado e cor em uma API confiável, pronta para ser integrada em qualquer sistema.
           </p>
           <div class="hero-actions">
-            <a class="btn" href="{{ whatsapp_link }}" target="_blank" rel="noopener">Contratar via WhatsApp</a>
+            <button class="btn" type="button" onclick="iniciarCheckout()">Comprar agora</button>
             <a class="btn ghost" href="#demo">Ver demonstração</a>
           </div>
           <div class="badges">
@@ -81,23 +81,24 @@
 
     <section class="section highlight" id="planos">
       <div class="plan">
-        <p class="eyebrow">Plano sugerido</p>
+        <p class="eyebrow">Plano único</p>
         <h3>{{ pricing.currency }} {{ pricing.value }}</h3>
-        <p class="lede">Pacote de {{ pricing.requests }} consultas mensais</p>
+        <p class="lede">{{ pricing.requests }}</p>
         <ul class="list">
           <li>Consulta completa: modelo, marca, cidade, tipo, estado e cor</li>
-          <li>Webhook de alertas de limite</li>
+          <li>Até 60 consultas por minuto de forma sustentada</li>
+          <li>Uso ilimitado dentro do mês contratado</li>
           <li>Suporte técnico dedicado</li>
         </ul>
-        <a class="btn" href="{{ whatsapp_link }}" target="_blank" rel="noopener">Falar com especialista</a>
-        <p class="micro">Personalize valores e volume conforme a necessidade.</p>
+        <button class="btn" type="button" onclick="iniciarCheckout()">Comprar agora</button>
+        <p class="micro">Pagamento de R$ {{ pricing.value }} / mês com checkout seguro Mercado Pago.</p>
       </div>
       <div class="info">
         <h3>Checkout via Mercado Pago</h3>
-        <p>Configure sua chave pública e privada no servidor para liberar pagamentos com segurança.</p>
-        <div class="pill">Use variáveis de ambiente para armazenar as chaves</div>
-        <div class="pill">Envio automático do token após confirmação</div>
-        <div class="pill">Logs completos de consumo e status</div>
+        <p>Configure seu token de acesso de produção para liberar pagamentos com segurança.</p>
+        <div class="pill">Token de acesso guardado em variável de ambiente</div>
+        <div class="pill">Criação de preferência server-side</div>
+        <div class="pill">Redireciono imediato para o checkout</div>
       </div>
     </section>
 
@@ -128,6 +129,26 @@
     </footer>
 
     <script>
+      async function iniciarCheckout() {
+        try {
+          const resposta = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          const dados = await resposta.json();
+
+          if (!resposta.ok || !dados.checkout_url) {
+            alert(dados.erro || 'Não foi possível iniciar o checkout no momento.');
+            return;
+          }
+
+          window.location.href = dados.checkout_url;
+        } catch (error) {
+          alert('Não foi possível iniciar o checkout no momento.');
+        }
+      }
+
       async function consultarPlaca(event) {
         event.preventDefault();
         const placaInput = document.getElementById('placa');

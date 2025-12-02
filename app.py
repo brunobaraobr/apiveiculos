@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template, request
 from urllib.parse import quote_plus
+import mercadopago
 import os
 
 app = Flask(__name__)
@@ -36,9 +37,12 @@ def index():
     whatsapp_link = build_whatsapp_link(whatsapp_number, whatsapp_message)
 
     pricing = {
-        "value": os.getenv("PLAN_PRICE", "39,90"),
+        "value": os.getenv("PLAN_PRICE", "400"),
         "currency": os.getenv("PLAN_CURRENCY", "R$"),
-        "requests": os.getenv("PLAN_REQUESTS", "500"),
+        "requests": os.getenv(
+            "PLAN_REQUESTS",
+            "60 consultas/min • uso ilimitado mensal",
+        ),
     }
 
     return render_template(
@@ -74,6 +78,52 @@ def consultar():
     }
 
     return jsonify(data)
+
+
+@app.route("/api/checkout", methods=["POST"])
+def checkout():
+    access_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
+    if not access_token:
+        return (
+            jsonify(
+                {
+                    "erro": "Configure a variável de ambiente MERCADOPAGO_ACCESS_TOKEN com seu token de acesso."
+                }
+            ),
+            500,
+        )
+
+    sdk = mercadopago.SDK(access_token)
+    preference_data = {
+        "items": [
+            {
+                "title": "Assinatura API de Consulta de Veículos",
+                "description": "Plano mensal - 60 consultas por minuto, uso ilimitado no mês",
+                "quantity": 1,
+                "currency_id": "BRL",
+                "unit_price": float(os.getenv("PLAN_PRICE", 400)),
+            }
+        ],
+        "back_urls": {
+            "success": os.getenv("CHECKOUT_SUCCESS_URL", "http://localhost:5000/"),
+            "failure": os.getenv("CHECKOUT_FAILURE_URL", "http://localhost:5000/"),
+            "pending": os.getenv("CHECKOUT_PENDING_URL", "http://localhost:5000/"),
+        },
+        "auto_return": "approved",
+    }
+
+    payer_email = request.json.get("email") if request.is_json else None
+    if payer_email:
+        preference_data["payer"] = {"email": payer_email}
+
+    try:
+        preference_response = sdk.preference().create(preference_data)
+        init_point = preference_response.get("response", {}).get("init_point")
+        if not init_point:
+            raise ValueError("Resposta do Mercado Pago não contém init_point")
+        return jsonify({"checkout_url": init_point})
+    except Exception as exc:  # pylint: disable=broad-except
+        return jsonify({"erro": f"Não foi possível criar o checkout: {exc}"}), 500
 
 
 if __name__ == "__main__":

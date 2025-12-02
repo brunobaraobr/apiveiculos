@@ -82,12 +82,17 @@ def consultar():
 
 @app.route("/api/checkout", methods=["POST"])
 def checkout():
-    access_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
+    access_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN") or os.getenv(
+        "MERCADO_PAGO_ACCESS_TOKEN"
+    )
     if not access_token:
         return (
             jsonify(
                 {
-                    "erro": "Configure a variável de ambiente MERCADOPAGO_ACCESS_TOKEN com seu token de acesso."
+                    "erro": (
+                        "Configure a variável de ambiente MERCADOPAGO_ACCESS_TOKEN com o token APP_USR..."
+                        " fornecido pelo Mercado Pago."
+                    )
                 }
             ),
             500,

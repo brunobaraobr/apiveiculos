@@ -24,7 +24,7 @@ A aplicação sobe em `http://localhost:5000`.
 ## Configurações opcionais
 
 - `PLAN_PRICE`, `PLAN_CURRENCY`, `PLAN_REQUESTS`: personalizam o card de preço (padrão `R$ 400` com 60 consultas/min e uso ilimitado no mês).
-- `MERCADOPAGO_ACCESS_TOKEN`: token de produção usado para criar a preferência de pagamento via `/api/checkout`.
+- `MERCADOPAGO_ACCESS_TOKEN` (ou `MERCADO_PAGO_ACCESS_TOKEN`): token de produção usado para criar a preferência de pagamento via `/api/checkout`.
 - `CHECKOUT_SUCCESS_URL`, `CHECKOUT_FAILURE_URL`, `CHECKOUT_PENDING_URL`: URLs para redirecionamento após o pagamento no Mercado Pago.
 
 ## Estrutura

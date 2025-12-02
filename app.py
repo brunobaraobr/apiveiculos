@@ -1,7 +1,10 @@
 from flask import Flask, jsonify, render_template, request
 from urllib.parse import quote_plus
+from dotenv import load_dotenv
 import mercadopago
 import os
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -82,16 +85,14 @@ def consultar():
 
 @app.route("/api/checkout", methods=["POST"])
 def checkout():
-    access_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN") or os.getenv(
-        "MERCADO_PAGO_ACCESS_TOKEN"
-    )
+    access_token = get_access_token()
     if not access_token:
         return (
             jsonify(
                 {
                     "erro": (
-                        "Configure a variável de ambiente MERCADOPAGO_ACCESS_TOKEN com o token APP_USR..."
-                        " fornecido pelo Mercado Pago."
+                        "Configure a variável de ambiente MERCADOPAGO_ACCESS_TOKEN (ou MERCADO_PAGO_ACCESS_TOKEN)"
+                        " com o token APP_USR fornecido pelo Mercado Pago."
                     )
                 }
             ),
@@ -123,12 +124,34 @@ def checkout():
 
     try:
         preference_response = sdk.preference().create(preference_data)
+        status_code = preference_response.get("status")
+        if status_code not in (200, 201):
+            response_body = preference_response.get("response", {}) or {}
+            error_message = response_body.get("message") or response_body.get("error")
+            raise ValueError(
+                f"Mercado Pago retornou status {status_code}: {error_message or 'Erro desconhecido'}"
+            )
+
         init_point = preference_response.get("response", {}).get("init_point")
         if not init_point:
             raise ValueError("Resposta do Mercado Pago não contém init_point")
         return jsonify({"checkout_url": init_point})
     except Exception as exc:  # pylint: disable=broad-except
         return jsonify({"erro": f"Não foi possível criar o checkout: {exc}"}), 500
+
+
+def get_access_token() -> str | None:
+    """
+    Recupera o token do Mercado Pago, suportando tanto variável padrão quanto fallback.
+    Também permite carregar tokens de um arquivo .env (via load_dotenv acima).
+    """
+
+    raw_token = os.getenv("MERCADOPAGO_ACCESS_TOKEN") or os.getenv(
+        "MERCADO_PAGO_ACCESS_TOKEN"
+    )
+    if raw_token:
+        return raw_token.strip()
+    return None
 
 
 if __name__ == "__main__":
